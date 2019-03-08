@@ -1,0 +1,5 @@
+unit Click_Relay_3_config;
+
+uses Click_Relay_3_types;
+
+end.

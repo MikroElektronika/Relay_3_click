@@ -1,0 +1,155 @@
+{
+Example for Relay_3 Click
+
+    Date          : Nov 2018.
+    Author        : Aleksandar Paunovic
+
+Test configuration dsPIC :
+    
+    MCU                : P33FJ256GP710A
+    Dev. Board         : EasyPIC Fusion v7
+    dsPIC Compiler ver : v7.1.0.0
+
+---
+
+Description :
+
+The application is composed of three sections :
+
+- System Initialization - Initializes LOG functionality, initializes RST and CS pins as OUTPUTs
+- Application Initialization - Initializes GPIO driver
+- Application Task - Activates relays 1 and/or 2 based on user input
+
+Commands :
+- '1' - Turns relay 1 on/off
+- '2' - Turns relay 2 on/off
+- '3' - Turns both relays on/off
+
+Additional Functions :
+
+- void relay3_case1( ) - Turns relay 1 on/off
+- void relay3_case2( ) - Turns relay 2 on/off
+- void relay3_case3( ) - Turns relays  on/off
+}
+program Click_Relay_3_DSPIC;
+
+uses Click_Relay_3_types, Click_Relay_3_config;
+
+var
+    dataReady : uint8_t; 
+    receivedData : uint8_t; 
+    iterator1 : uint8_t; 
+    iterator2 : uint8_t; 
+    iterator3 : uint8_t; 
+    
+procedure relay3_case1(); 
+begin
+    if (iterator1 = 0) then 
+    begin
+        relay3_relayOn(_RELAY3_RELAY_1); 
+        iterator1 := 1; 
+        mikrobus_logWrite('relay 1 on', _LOG_LINE); 
+    end
+    else 
+    begin
+        if (iterator1 = 1) then 
+        begin
+            relay3_relayOff(_RELAY3_RELAY_1); 
+            iterator1 := 0; 
+            mikrobus_logWrite('relay 1 off', _LOG_LINE); 
+        end; 
+    end;
+end;
+
+procedure relay3_case2(); 
+begin
+    if (iterator2 = 0) then 
+    begin
+        relay3_relayOn(_RELAY3_RELAY_2); 
+        iterator2 := 1; 
+        mikrobus_logWrite('relay 2 on', _LOG_LINE); 
+    end
+    else 
+    begin
+        if (iterator2 = 1) then 
+        begin
+            relay3_relayOff(_RELAY3_RELAY_2); 
+            iterator2 := 0; 
+            mikrobus_logWrite('relay 2 off', _LOG_LINE); 
+        end; 
+    end;
+end;
+
+procedure relay3_case3(); 
+begin
+    if (iterator3 = 0) then 
+    begin
+        relay3_relayOn(_RELAY3_BOTH_RELAYS); 
+        iterator3 := 1; 
+        mikrobus_logWrite('relays on', _LOG_LINE); 
+    end
+    else 
+    begin
+        if (iterator3 = 1) then 
+        begin
+            relay3_relayOff(_RELAY3_BOTH_RELAYS); 
+            iterator3 := 0; 
+            mikrobus_logWrite('relays off', _LOG_LINE); 
+        end; 
+    end;
+end;
+
+procedure systemInit(); 
+begin
+    mikrobus_gpioInit(_MIKROBUS1, _MIKROBUS_RST_PIN, _GPIO_OUTPUT); 
+    mikrobus_gpioInit(_MIKROBUS1, _MIKROBUS_CS_PIN, _GPIO_OUTPUT); 
+    mikrobus_logInit(_LOG_USBUART_A, 9600); 
+    Delay_ms(100); 
+    mikrobus_logWrite('system init done', _LOG_LINE); 
+end;
+
+procedure applicationInit(); 
+begin
+    relay3_gpioDriverInit(T_RELAY3_P(@_MIKROBUS1_GPIO)); 
+    mikrobus_logWrite('application init done', _LOG_LINE); 
+end;
+
+procedure applicationTask(); 
+begin
+    dataReady := UART_Rdy_Ptr(); 
+    if (dataReady <> 0) then 
+    begin
+        receivedData := UART_Rd_Ptr(); 
+        case receivedData of
+            '1' :
+            begin
+                relay3_case1(); 
+            end;
+            '2' :
+            begin
+                relay3_case2(); 
+            end;
+            '3' :
+            begin
+                relay3_case3(); 
+            end
+            else
+            begin
+                mikrobus_logWrite('wrong command', _LOG_LINE); 
+            end;
+        end;
+    end; 
+end;
+
+begin
+    iterator1 := 0;
+    iterator2 := 0;
+    iterator3 := 0;
+
+    systemInit(); 
+    applicationInit(); 
+    while (1) do 
+    begin 
+        applicationTask(); 
+    end;
+end.

@@ -1,0 +1,4 @@
+module Click_Relay_3_config
+
+include Click_Relay_3_types
+end.
